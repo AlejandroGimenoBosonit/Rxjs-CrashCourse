@@ -12,8 +12,17 @@
 - [Observer and Subscriber](#observer-and-subscriber)
 - [Subscription & Unsubscribe](#subscription--unsubscribe)
 - [Subject](#subject)
-- [Hot & Cold Observables]()
-- []()
+
+## Observable Creation
+
+- [of]()
+- [fromEvent]()
+- [range]()
+- [interval/timer]()
+- [timer - Special config]()
+- [asyncScheduler]()
+- [from/of Examples]()
+
 
 ## Basic RxJS Concepts
 
@@ -241,3 +250,56 @@ setTimeout(()=>{
 ```
 
 ## Subject
+
+An RxJS Subject is a special type of Observable that allows values to be multicasted to many Observers. While plain Observables are unicast (each subscribed Observer owns an independent execution of the Observable), Subjects are multicast.
+
+**Every Subject is an Observable**. Given a Subject, you can subscribe to it, providing an Observer, which will start receiving values normally. From the perspective of the Observer, it cannot tell whether the Observable execution is coming from a plain unicast Observable or a Subject.
+
+Internally to the Subject, subscribe does not invoke a new execution that delivers values. It simply registers the given Observer in a list of Observers, similarly to how addListener usually works in other libraries and languages.
+
+**Every Subject is an Observer**. It is an object with the methods next(v), error(e), and complete(). To feed a new value to the Subject, just call next(theValue), and it will be multicasted to the Observers registered to listen to the Subject.
+
+In the example below We create an observable that emits random numbers every second:
+
+```
+import { Observer, Observable, Subject } from 'rxjs';
+
+// observer
+const observer: Observer<any> = {
+    next        : value => console.log( 'next: ', value ),
+    error       : error => console.warn( 'error: ', error ),
+    complete    : () => console.info( 'COMPLETED' ),
+};
+
+// observable
+const interval$ = new Observable<number>( subscriber=>{
+
+    const intervalID = setInterval(()=>{
+        return subscriber.next( Math.random() );
+    }, 1000);
+
+    // when unsubscribe is called
+    return ()=>{
+        clearInterval(intervalID);
+        console.log("Interval destroyed");
+        
+    };
+
+});
+
+// Subject
+const subject$ = new Subject();
+
+// use subject to send same info to multiple subscriptions
+const subscription = interval$.subscribe( subject$ );
+
+const subs1 = subject$.subscribe( observer );
+const subs2 = subject$.subscribe( observer );
+
+setTimeout(() => {
+    subject$.next(10);
+    subject$.complete();
+    subscription.unsubscribe();
+}, 3500);
+
+```

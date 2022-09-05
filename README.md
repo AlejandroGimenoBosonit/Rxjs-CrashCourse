@@ -8,8 +8,9 @@
 
 ## Code Index
 
-- [Observables]()
-- [Subscriber]()
+- [Observables](#observables)
+- [Observer and Subscriber](#observer-and-subscriber)
+- [Subscription & Unsubscribe](#subscription--unsubscribe)
 - [Subject]()
 - [Hot & Cold Observables]()
 - []()
@@ -88,3 +89,57 @@ const obs$ = new Observable<string>(
 obs$.subscribe(console.log);
 
 ```
+
+## Observer and Subscriber
+
+Implements the Observer interface and extends the Subscription class. While the Observer is the public API for consuming the values of an Observable, all Observers get converted to a Subscriber, in order to provide Subscription-like capabilities such as unsubscribe. Subscriber is a common type in RxJS, and crucial for implementing operators, but it is rarely used as a public API.
+
+We can define inside our observable's subscribe method three callbacks with three examples:
+- Integrating inside an Observable
+    ```
+    const obs$ = new Observable<string>(
+        // there is a subscriber inside the observable
+        (subscriber: Subscriber<string>) => {
+            // creating subscriptions to look for observable's emits (changes)
+            subscriber.next('Hello'); // emits a message
+            subscriber.next('World!');
+
+            // force an error when observable subscribes
+            // const a = undefined;
+            // a.name = 'John';
+
+
+            // To avoid to notify of posterior values
+            subscriber.complete();
+
+            // these messages will not be emitted
+            subscriber.next('Hi');
+        }
+    );
+    ```
+- Using the 'Subscribe' method
+   ```
+   const obs2$ = new Observable<string>();
+    obs2$.subscribe(
+        // calling three callbacks
+        {
+            next:       value => console.log('next: ', value),
+            error:      error => console.warn( 'error: ', error ),
+            complete:   () => console.info('Completed')
+        }
+    );
+   ``` 
+- Declaring an external Observer
+    ```
+    const obs3$ = new Observable<string>();
+    const observer: Observer<string> = {
+
+        next:       value => console.log('next: ', value),
+        error:      error => console.warn( 'error: ', error ),
+        complete:   () => console.info('Completed')
+
+    }
+    obs3$.subscribe( observer );
+    ```
+
+## Subscription & Unsubscribe

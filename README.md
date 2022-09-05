@@ -11,7 +11,7 @@
 - [Observables](#observables)
 - [Observer and Subscriber](#observer-and-subscriber)
 - [Subscription & Unsubscribe](#subscription--unsubscribe)
-- [Subject]()
+- [Subject](#subject)
 - [Hot & Cold Observables]()
 - []()
 
@@ -143,3 +143,101 @@ We can define inside our observable's subscribe method three callbacks with thre
     ```
 
 ## Subscription & Unsubscribe
+
+In this section we're going to study how works an observable and how unsubscribe from our observable's instance.
+
+- First of all We're going to declare an Observable where We will declare a counter method.
+    ```
+    const interval$ = new Observable<number>( subscriber => {
+        let counter: number = 0;
+
+        // define counting by js method 'setInterval' that emits a value every x seconds
+        const interval = setInterval( ()=>{
+            counter++;
+
+            // We need to EMIT (the counter value) to our subscription
+            subscriber.next( counter );
+
+        }, 1000 );
+    });
+    ```
+- In second place We're going to create a observable's instance to subscribe to our observable
+    ```
+    const subs = interval$.subscribe();
+    ```
+- If we want to unsubscribe from our observable instance we only need tocall this method. In this example We're going to stop our counter at the first three seconds.
+    ```
+    setTimeout(()=>{
+        subs.unsubscribe();  
+        },3000
+    );
+    ```
+**WARNING**: If We put a console.log order in our observable's body We can see that our observable's content is still running at the sime time that our instance is unsubscribed. For correct this we can use the **Observable's return method** to define a process when we want to unsubscribed.
+
+```
+const interval$ = new Observable<number>( subscriber => {
+
+    // counter variable will emit every second
+    let counter: number = 0;
+
+    const interval = setInterval(
+        // js method that execute body every second
+        () => {
+            counter++;
+            // ATTENTION: Js process executing in background even if subscription is canceled
+            console.log(counter);
+            
+            // emit subscription
+            subscriber.next(counter);
+        }, 1000)
+
+    // desired process when observable is unsubscribed
+
+    return () => {
+        clearInterval( interval );
+    };
+});
+```
+
+We can see the full code in the following instruction:
+```
+const interval$ = new Observable<number>( subscriber => {
+
+    // counter variable will emit every second
+    let counter: number = 0;
+    
+    
+    const interval = setInterval(
+        // js method that execute body every second
+        () => {
+            
+            counter++;
+            // ATTENTION: Js process executing in background even if subscription is canceled
+            console.log(counter);
+            
+            // emit subscription
+            subscriber.next(counter);
+
+        }, 1000)
+
+    // desired process when observable is unsubscribed
+    return () => {
+        // stop setInterval
+        clearInterval( interval );
+        console.log("interval destroyed");
+        
+    };
+
+});
+
+// observable's instance
+const subs = interval$.subscribe();
+
+// cancel subscription at the three first seconds
+setTimeout(()=>{
+    subs.unsubscribe();
+    console.log("canceled subscription");       
+},3000);
+```
+
+## Subject

@@ -15,8 +15,8 @@
 
 ## Observable Creation
 
-- [of]()
-- [fromEvent]()
+- [of](#function-of)
+- [fromEvent](#function-fromevent)
 - [range]()
 - [interval/timer]()
 - [timer - Special config]()
@@ -303,3 +303,39 @@ setTimeout(() => {
 }, 3500);
 
 ```
+---
+## Observable Creation
+
+## Function 'of()'
+
+This method allows us to create a observable by a value as argument. In the code below we can see how We create an observable that emits a group of numbers until it completes and finish the process.
+
+```
+import { of } from "rxjs";
+
+const observer$ = of(1,2,3,4,5,6);
+
+observer$.subscribe(console.log)
+```
+
+This method converts its argument into a sequence of values that would be emitted( **of< T >(...args: Array< T | SchedulerLike >): Observable< T >** ).
+
+```
+import { of } from "rxjs";
+
+const observer$ = of(1,2,3,4,5,6);
+
+// We also could send to it an array's content as a parameter
+const observer$ = of<number[]>(...[1,2,3,4,5,6,7]);
+
+// A bit more complicated...
+const observer$ = of<any>( [1,2], {a:1, b:2}, function(){return 'Hi';}, true, Promise.resolve(true) );
+
+observer$.subscribe({
+    next:       value => console.log('next: ', value),
+    error:      error => console.warn( 'error: ', error ),
+    complete:   () => console.info('Completed')
+})
+```
+
+## Function 'fromEvent()'

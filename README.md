@@ -19,8 +19,7 @@
 - [fromEvent](#function-fromevent)
 - [range](#function-range)
 - [interval/timer](#function-interval--timer)
-- [timer - Special config]()
-- [asyncScheduler]()
+- [asyncScheduler](#function-asyncscheduler)
 - [from/of Examples]()
 
 
@@ -456,3 +455,69 @@ Async Outputs:
 ```
 
 ## Function 'Interval' & 'Timer'
+
+### Interval
+
+Creates an Observable that emits sequential numbers every specified interval of time, on a specified SchedulerLike.
+
+```
+interval(
+    period: number = 0, 
+    scheduler: SchedulerLike = asyncScheduler
+): Observable<number>
+```
+
+|    name   |      type      |  desc  |
+|-----------|----------------|---------------------------------------------------------------------------------|
+| period    |  number        | Optional. Default is 0. The interval size in milliseconds (by default) or the time unit determined by the scheduler's clock.                                 |   
+| scheduler     |  [SchedulerLike](https://rxjs.dev/api/index/interface/SchedulerLike)        | Optional. Default is [asyncScheduler](https://rxjs.dev/api/index/const/asyncScheduler). The SchedulerLike to use for scheduling the emission of values, and providing a notion of "time".  |   
+
+```
+import { interval } from "rxjs";
+
+const ms: number = 1000; // time value as milliseconds
+
+const observer = {
+    next: val => console.log('next: ', val),
+    complete: () => console.log('complete')
+};
+
+console.log('Start');
+const interval$ = interval(ms);
+interval$.subscribe( observer );
+console.log('End');
+```
+
+
+### Timer
+
+ ```
+ timer(
+    dueTime: number | Date = 0, 
+    intervalOrScheduler?: number | SchedulerLike, 
+    scheduler: SchedulerLike = asyncScheduler
+): Observable<number>
+ ```
+
+This observable is useful for creating delays in code, or racing against other values for ad-hoc timeouts.
+
+The delay is specified by default in milliseconds, however providing a custom scheduler could create a different behavior.
+
+```
+import { timer } from "rxjs";
+
+const ms: number = 1000; // time value as milliseconds
+
+const observer = {
+    next: val => console.log('next: ', val),
+    complete: () => console.log('complete')
+};
+
+const timer$ = timer( ms );
+
+console.log('Start');
+timer$.subscribe( observer );
+console.log('Fin');
+```
+
+## Function 'asyncScheduler'

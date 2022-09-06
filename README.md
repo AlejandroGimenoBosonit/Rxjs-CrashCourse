@@ -18,7 +18,7 @@
 - [of](#function-of)
 - [fromEvent](#function-fromevent)
 - [range](#function-range)
-- [interval/timer]()
+- [interval/timer](#function-interval--timer)
 - [timer - Special config]()
 - [asyncScheduler]()
 - [from/of Examples]()
@@ -391,3 +391,68 @@ src2$.subscribe( event => {
 
 ## Function 'range()'
 
+Creates an Observable that emits a sequence of numbers within a specified range.
+
+```
+range(
+    start       : number = 0, 
+    count?      : number, 
+    scheduler?  : SchedulerLike
+): Observable<number>
+```
+
+|    name   |      type      |  desc  |
+|-----------|----------------|---------------------------------------------------------------------------------|
+| start     |  number        | The value of the first integer in the sequence.                                 |   
+| count     |  number        | Optional. Default is undefined. The number of sequential integers to generate.  |   
+| scheduler |  [SchedulerLike](https://rxjs.dev/api/index/interface/SchedulerLike) | Optional. Default is undefined. A [SchedulerLike](https://rxjs.dev/api/index/interface/SchedulerLike) to use for scheduling the emissions of the notifications.  |   
+
+- Examples
+    ```
+    // synchronous
+    console.log('Start');
+    const version2$ = range(
+        1, // from: 1
+        9 // emit 9 EMISSIONS (not the final point instead)
+    );
+    version2$.subscribe(console.log) // 1, 2, 3, 4, 5, 6, 7, 8, 9
+    console.log('End');
+
+
+
+    console.log('Start');
+    const version3$ = range(
+        -5, // from: -5
+        10 // emit 10 EMISSIONS (not the final point instead)
+    );
+    version3$.subscribe(console.log)// -5, -4, -3, -2, -1, 0, 1, 2, 3, 4
+    console.log('End');
+
+
+    const version4$ = range(5); // 5 amissions because the start default's value is 0
+    version4$.subscribe(console.log) // 0,1,2,3,4
+
+    ```
+
+**WARNING**: The RxJS v.8 has deprecated the parameter 'scheduler'. We use 'observeOn()' instead  with a pipe:
+```
+console.log('Start');
+const observable$ = range( 1, 5);
+observable$
+    .pipe( observeOn( asyncScheduler ) )
+    .subscribe(console.log) 
+console.log('End');
+/*
+
+Async Outputs:
+'Start'
+'End'
+0
+1
+2
+3
+4
+*/
+```
+
+## Function 'Interval' & 'Timer'

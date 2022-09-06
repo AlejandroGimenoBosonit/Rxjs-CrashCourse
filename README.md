@@ -15,14 +15,11 @@
 
 ## Observable Creation
 
-- [of]()
-- [fromEvent]()
-- [range]()
-- [interval/timer]()
-- [timer - Special config]()
-- [asyncScheduler]()
-- [from/of Examples]()
-
+- [of](#function-of)
+- [fromEvent](#function-fromevent)
+- [range](#function-range)
+- [interval/timer](#function-interval--timer)
+- [asyncScheduler](#function-asyncscheduler)
 
 ## Basic RxJS Concepts
 
@@ -302,4 +299,255 @@ setTimeout(() => {
     subscription.unsubscribe();
 }, 3500);
 
+```
+---
+## Observable Creation
+
+## Function 'of()'
+
+This method allows us to create a observable by a value as argument. In the code below we can see how We create an observable that emits a group of numbers until it completes and finish the process.
+
+```
+import { of } from "rxjs";
+
+const observer$ = of(1,2,3,4,5,6);
+
+observer$.subscribe(console.log)
+```
+
+This method converts its argument into a sequence of values that would be emitted( **of< T >(...args: Array< T | SchedulerLike >): Observable< T >** ).
+
+```
+import { of } from "rxjs";
+
+const observer$ = of(1,2,3,4,5,6);
+
+// We also could send to it an array's content as a parameter
+const observer$ = of<number[]>(...[1,2,3,4,5,6,7]);
+
+// A bit more complicated...
+const observer$ = of<any>( [1,2], {a:1, b:2}, function(){return 'Hi';}, true, Promise.resolve(true) );
+
+observer$.subscribe({
+    next:       value => console.log('next: ', value),
+    error:      error => console.warn( 'error: ', error ),
+    complete:   () => console.info('Completed')
+})
+```
+
+## Function 'fromEvent()'
+
+Creates an Observable that emits events of a specific type coming from the given event target.
+
+```
+fromEvent< T >(
+        target          : any, 
+        eventName       : string, 
+        options?        : EventListenerOptions | ((...args: any[]) => T), 
+        resultSelector? : (...args: any[]) => T
+): Observable< T >
+```
+In the example below We will see how we can access to a target using an event. For example the 'DOM' events:
+
+```
+// fromEvent exercise
+import { fromEvent } from 'rxjs';
+
+const src1$ = fromEvent<MouseEvent>(
+    // target: The entire html document
+    document,
+    // eventName: when user make a mouse's 'click'
+    'click'
+);
+const src2$ = fromEvent<KeyboardEvent>(
+    // target: The entire html document
+    document,
+    // eventName: when user press up a key
+    'keyup'
+);
+
+// create a simple observer
+const observer = {
+    next: val => console.log('Value: ', val)
+};
+
+// subscription to the observable by observer
+src1$.subscribe( observer );
+
+// subscription to the observable to extract the pointer's coordinates
+src1$.subscribe(({x, y})=>{
+    console.log(`Pointer Coordinates -> x: ${x}, y: ${y}`);
+})
+
+// subscription to the observable to print the key that we pressed.
+src2$.subscribe( event => {
+    console.log('Key pressed: ', event.key)
+});
+
+```
+
+## Function 'range()'
+
+Creates an Observable that emits a sequence of numbers within a specified range.
+
+```
+range(
+    start       : number = 0, 
+    count?      : number, 
+    scheduler?  : SchedulerLike
+): Observable<number>
+```
+
+|    name   |      type      |  desc  |
+|-----------|----------------|---------------------------------------------------------------------------------|
+| start     |  number        | The value of the first integer in the sequence.                                 |   
+| count     |  number        | Optional. Default is undefined. The number of sequential integers to generate.  |   
+| scheduler |  [SchedulerLike](https://rxjs.dev/api/index/interface/SchedulerLike) | Optional. Default is undefined. A [SchedulerLike](https://rxjs.dev/api/index/interface/SchedulerLike) to use for scheduling the emissions of the notifications.  |   
+
+- Examples
+    ```
+    // synchronous
+    console.log('Start');
+    const version2$ = range(
+        1, // from: 1
+        9 // emit 9 EMISSIONS (not the final point instead)
+    );
+    version2$.subscribe(console.log) // 1, 2, 3, 4, 5, 6, 7, 8, 9
+    console.log('End');
+
+
+
+    console.log('Start');
+    const version3$ = range(
+        -5, // from: -5
+        10 // emit 10 EMISSIONS (not the final point instead)
+    );
+    version3$.subscribe(console.log)// -5, -4, -3, -2, -1, 0, 1, 2, 3, 4
+    console.log('End');
+
+
+    const version4$ = range(5); // 5 amissions because the start default's value is 0
+    version4$.subscribe(console.log) // 0,1,2,3,4
+
+    ```
+
+**WARNING**: The RxJS v.8 has deprecated the parameter 'scheduler'. We use 'observeOn()' instead  with a pipe:
+```
+console.log('Start');
+const observable$ = range( 1, 5);
+observable$
+    .pipe( observeOn( asyncScheduler ) )
+    .subscribe(console.log) 
+console.log('End');
+/*
+
+Async Outputs:
+'Start'
+'End'
+0
+1
+2
+3
+4
+*/
+```
+
+## Function 'Interval' & 'Timer'
+
+### Interval
+
+Creates an Observable that emits sequential numbers every specified interval of time, on a specified SchedulerLike.
+
+```
+interval(
+    period: number = 0, 
+    scheduler: SchedulerLike = asyncScheduler
+): Observable<number>
+```
+
+|    name   |      type      |  desc  |
+|-----------|----------------|---------------------------------------------------------------------------------|
+| period    |  number        | Optional. Default is 0. The interval size in milliseconds (by default) or the time unit determined by the scheduler's clock.                                 |   
+| scheduler     |  [SchedulerLike](https://rxjs.dev/api/index/interface/SchedulerLike)        | Optional. Default is [asyncScheduler](https://rxjs.dev/api/index/const/asyncScheduler). The SchedulerLike to use for scheduling the emission of values, and providing a notion of "time".  |   
+
+```
+import { interval } from "rxjs";
+
+const ms: number = 1000; // time value as milliseconds
+
+const observer = {
+    next: val => console.log('next: ', val),
+    complete: () => console.log('complete')
+};
+
+console.log('Start');
+const interval$ = interval(ms);
+interval$.subscribe( observer );
+console.log('End');
+```
+
+
+### Timer
+
+ ```
+ timer(
+    dueTime: number | Date = 0, 
+    intervalOrScheduler?: number | SchedulerLike, 
+    scheduler: SchedulerLike = asyncScheduler
+): Observable<number>
+ ```
+
+This observable is useful for creating delays in code, or racing against other values for ad-hoc timeouts.
+
+The delay is specified by default in milliseconds, however providing a custom scheduler could create a different behavior.
+
+```
+import { timer } from "rxjs";
+
+const ms: number = 1000; // time value as milliseconds
+
+const observer = {
+    next: val => console.log('next: ', val),
+    complete: () => console.log('complete')
+};
+
+const timer$ = timer( ms );
+
+console.log('Start');
+timer$.subscribe( observer );
+console.log('Fin');
+```
+
+## Function 'asyncScheduler'
+async scheduler schedules tasks asynchronously, by putting them on the JavaScript event loop queue. It is best used to delay tasks in time or to schedule tasks repeating in intervals.
+
+If you just want to "defer" task, that is to perform it right after currently executing synchronous code ends (commonly achieved by setTimeout(deferredTask, 0)), better choice will be the asapScheduler scheduler.
+
+```
+import { asyncScheduler } from 'rxjs';
+
+// setTimeout (() => {}, 3000);
+// setInterval(() => {}, 3000);
+
+const s  = () => console.log('Hello World');
+const s = name => console.log(`Hello ${ name }`);
+
+// asyncScheduler.schedule( s, 2000 );
+// asyncScheduler.schedule( s, 2000, 'Fernando' );
+
+
+ const subs = asyncScheduler.schedule( function(state){
+
+    console.log('state', state);
+
+    this.schedule( state + 1, 1000 );
+    
+}, 3000, 0 );
+
+
+// setTimeout( () => {
+//     subs.unsubscribe();
+// }, 6000);
+
+asyncScheduler.schedule( ()=> subs.unsubscribe(), 6000 );
 ```

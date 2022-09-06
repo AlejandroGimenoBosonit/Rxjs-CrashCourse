@@ -20,8 +20,6 @@
 - [range](#function-range)
 - [interval/timer](#function-interval--timer)
 - [asyncScheduler](#function-asyncscheduler)
-- [from/of Examples]()
-
 
 ## Basic RxJS Concepts
 
@@ -521,3 +519,35 @@ console.log('Fin');
 ```
 
 ## Function 'asyncScheduler'
+async scheduler schedules tasks asynchronously, by putting them on the JavaScript event loop queue. It is best used to delay tasks in time or to schedule tasks repeating in intervals.
+
+If you just want to "defer" task, that is to perform it right after currently executing synchronous code ends (commonly achieved by setTimeout(deferredTask, 0)), better choice will be the asapScheduler scheduler.
+
+```
+import { asyncScheduler } from 'rxjs';
+
+// setTimeout (() => {}, 3000);
+// setInterval(() => {}, 3000);
+
+const s  = () => console.log('Hello World');
+const s = name => console.log(`Hello ${ name }`);
+
+// asyncScheduler.schedule( s, 2000 );
+// asyncScheduler.schedule( s, 2000, 'Fernando' );
+
+
+ const subs = asyncScheduler.schedule( function(state){
+
+    console.log('state', state);
+
+    this.schedule( state + 1, 1000 );
+    
+}, 3000, 0 );
+
+
+// setTimeout( () => {
+//     subs.unsubscribe();
+// }, 6000);
+
+asyncScheduler.schedule( ()=> subs.unsubscribe(), 6000 );
+```

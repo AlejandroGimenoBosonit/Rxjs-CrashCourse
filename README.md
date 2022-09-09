@@ -21,6 +21,19 @@
 - [interval/timer](#function-interval--timer)
 - [asyncScheduler](#function-asyncscheduler)
 
+## Basic Operators
+
+- [Operators](#basic-operators-1)
+- [Operators: 'map'](#map)
+- [Operators: 'filter'](#filter-and-from)
+- [Operators: 'Chained Operators' ](#chained-operators)
+- [Operators: 'tap'](#tap)
+- [Progress-Bar](#progress-bar)
+- [Operators: 'reduce'](#reduce)
+- [Operators: 'scan'](#scan)
+
+---
+
 ## Basic RxJS Concepts
 
 We want to obtain information in real time. There are several example of apps and projects that need to obtain information by **reactive functions**. We want to our app ould make request at the same time that we make another process and update it when the request is finished.
@@ -551,3 +564,332 @@ const s = name => console.log(`Hello ${ name }`);
 
 asyncScheduler.schedule( ()=> subs.unsubscribe(), 6000 );
 ```
+---
+## Basic Operators
+
+RxJS is mostly useful for its operators, even though the Observable is the foundation. Operators are the essential pieces that allow complex asynchronous code to be easily composed in a declarative manner.
+
+What are operators?
+Operators are functions. There are two kinds of operators:
+
+Pipeable Operators are the kind that can be piped to Observables using the syntax observableInstance.pipe(operator()). These include, filter(...), and mergeMap(...). When called, they do not change the existing Observable instance. Instead, they return a new Observable, whose subscription logic is based on the first Observable.
+
+A Pipeable Operator is a function that takes an Observable as its input and returns another Observable. It is a pure operation: the previous Observable stays unmodified.
+
+A Pipeable Operator is essentially a pure function which takes one Observable as input and generates another Observable as output. Subscribing to the output Observable will also subscribe to the input Observable.
+
+Creation Operators are the other kind of operator, which can be called as standalone functions to create a new Observable. For example: of(1, 2, 3) creates an observable that will emit 1, 2, and 3, one right after another. Creation operators will be discussed in more detail in a later section.
+
+More examples at the [RxJS official site](https://www.learnrxjs.io/learn-rxjs/operators)!
+
+## map
+
+Used to apply projection with each value from source.
+
+```
+map(
+
+    project: Function, 
+    thisArg: any
+
+): Observable
+```
+
+**Example**: 
+In this case the observable 'range' will emit 5 emissions from 1 as starter value.BUT if We want to take these values and modify them to emit from 10 to 50 We can use this operator:
+
+```
+import { range } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+
+const observable$ = range(1,5);
+
+observable$.pipe(
+
+    map( value => value * 10 )
+
+).subscribe( console.log );
+
+```
+
+## filter and from
+
+### filter
+Emit values that pass the provided condition.
+
+```
+filter(
+
+    select: Function, 
+    thisArg: any
+
+): Observable
+```
+
+**Example**: 
+```
+import { range, from } from 'rxjs';
+import { filter } from 'rxjs/operators';
+
+const observer$ = range(1,5); // 1, 2, 3, 4, 5
+
+observer$
+.pipe(
+    filter<number>( (value, index) => {
+        
+        return value%2 === 1 
+    
+    }) // odd numbers
+)
+.subscribe( console.log )
+```
+
+### from
+Turn an array, promise, or iterable into an observable.
+```
+from(
+    
+    ish: ObservableInput, 
+    mapFn: function, 
+    thisArg: any, 
+    scheduler: Scheduler
+
+): Observable
+```
+**Example**:
+```
+interface Character {
+    type: string;
+    name: string;
+}
+
+const characters: Character[] = [
+    { type: 'hero', name: 'Batman' },
+    { type: 'hero', name: 'Robin' },
+    { type: 'villain', name: 'Joker' },
+];
+
+from(characters)
+.pipe(
+    filter<Character>( character => character.type==='hero' )
+)
+.subscribe(filteredCharacter => console.log(filteredCharacter.name))
+```
+
+## Chained Operators
+
+Example where we want to filter all our keyboard event in the page
+and print by console ONLY when we press 'Enter'. For this example We want to do two steps:
+
+- Map the keyboard event to extract the key's code
+- Using the  key's code to check if is 'Enter'
+
+```
+import { fromEvent } from 'rxjs';
+import { map, filter } from 'rxjs/operators';
+
+const observable$ = fromEvent<KeyboardEvent>( document, 'keyup');
+        
+observable$.pipe(
+
+    map( event => event.code ),
+    filter( key => key === 'Enter' )
+    
+)
+.subscribe(console.log)
+```
+
+## tap
+
+Transparently perform actions or side-effects, such as logging.
+
+```
+import { range } from "rxjs";
+import { map, tap} from 'rxjs/operators';
+const numbers$ = range (7,1);
+
+numbers$
+.pipe(
+    tap( x => {
+        console.log('BEFORE: ', x);
+        return x*1000000; // The return statement is ignored everytime
+    }),
+
+    map( value => value*10),
+    
+    tap({
+        next: y => console.log("AFTER: ", y),
+        error: err => console.log("SOMETHING IT'S WRONG!"),
+        complete: () => console.log("That's all, folks!")
+    })
+)
+.subscribe( final => console.log("Final Value:", final));
+```
+
+## Progress-Bar
+
+Example to create a progress bar in a html document from typescript and rxjs operators:
+
+- 1. Create a div element
+
+    ```
+    const text = document.createElement('div');
+    ```
+- 2. Assign a content to the div element
+    ```
+    text.innerHTML = `
+
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce et nisi hendrerit nunc egestas tincidunt at in nunc. Cras molestie facilisis magna, non vehicula nibh euismod quis. Curabitur sed odio non velit porta ultricies vel id ipsum. Curabitur venenatis neque erat, quis rhoncus neque iaculis a. Cras eu euismod odio, sed mollis magna. Aliquam ut dui a libero elementum rhoncus a ac enim. Nullam posuere odio sem, nec porta ligula sodales et. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse finibus, odio sed mattis porttitor, orci ante commodo sapien, vel convallis tortor tortor id urna.
+    <br/><br/>  
+    ...
+    `;
+    ```
+- 3. Declare a body element and assign our text
+    ```
+    // body referene
+    const body = document.querySelector('body');
+
+    // asign text into body
+    body.append( text );
+    ```
+- 4. Assign a progress bar
+    ```
+    // progress bar - div that increments ts weight by scroll or %
+    const progressBar = document.createElement('div');
+
+    progressBar.setAttribute('class', 'progress-bar');
+
+    body.append( progressBar );
+    ```
+- 5. Subscribe to the observable 
+    ```
+    // subscribe to the html scroll to obtain the percentage
+    const scroll$ = fromEvent( document, 'scroll' );
+    const percentage$ = scroll$.pipe(
+        // percentage calculus
+        map( percentageCalc ),
+        tap( console.log )
+    );
+
+    percentage$.subscribe( percentage => {
+        // assign new percentage to the style
+        progressBar.style.width = `${percentage}%`
+    })
+
+    ```
+- 6. A method to calculate our scroll's percentage
+    ```
+    // method to calculate percentage
+    const percentageCalc = ( event ) => {
+        const { scrollTop, scrollHeight, clientHeight } = event.target.documentElement;
+        return (scrollTop / (scrollHeight - clientHeight))*100;;
+    };
+    ```
+
+- FULL EXAMPLE:
+
+    ```
+    import { fromEvent, map, tap } from 'rxjs';
+
+    // create a div element in the DOM
+    const text = document.createElement('div');
+
+    text.innerHTML = `
+
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce et nisi hendrerit nunc egestas tincidunt at in nunc. Cras molestie facilisis magna, non vehicula nibh euismod quis. Curabitur sed odio non velit porta ultricies vel id ipsum. Curabitur venenatis neque erat, quis rhoncus neque iaculis a. Cras eu euismod odio, sed mollis magna. Aliquam ut dui a libero elementum rhoncus a ac enim. Nullam posuere odio sem, nec porta ligula sodales et. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse finibus, odio sed mattis porttitor, orci ante commodo sapien, vel convallis tortor tortor id urna.
+    <br/><br/>  
+    Morbi sed nisl feugiat, pharetra lectus sit amet, dapibus mauris. Curabitur semper ut turpis ut fringilla. Nullam pharetra orci porttitor, lacinia leo a, mattis mi. Nunc gravida pretium ante nec aliquam. Mauris eleifend massa in dolor ullamcorper ornare. Morbi ut leo sit amet erat rhoncus egestas ac a est. Nam aliquam velit augue, eget iaculis eros varius id.
+    `;
+
+    // body referene
+    const body = document.querySelector('body');
+
+    // asign text into body
+    body.append( text );
+
+
+    // progress bar - div that increments ts weight by scroll or %
+    const progressBar = document.createElement('div');
+
+    progressBar.setAttribute('class', 'progress-bar');
+
+    body.append( progressBar );
+
+
+
+    // method to calculate percentage
+    const percentageCalc = ( event ) => {
+        const { scrollTop, scrollHeight, clientHeight } = event.target.documentElement;
+        return (scrollTop / (scrollHeight - clientHeight))*100;;
+    };
+
+
+    // subscribe to the html scroll to obtain the percentage
+    const scroll$ = fromEvent( document, 'scroll' );
+    const percentage$ = scroll$.pipe(
+        // percentage calculus
+        map( percentageCalc ),
+        tap( console.log )
+    );
+
+    percentage$.subscribe( percentage => {
+        // assign new percentage to the style
+        progressBar.style.width = `${percentage}%`
+    })
+
+
+
+    ```
+## reduce
+Applies an accumulator function over the source Observable, and returns the accumulated result when the source completes, given an optional seed value.
+
+```
+reduce<V, A>(
+    accumulator: (
+        acc: V | A, 
+        value: V, 
+        index: number
+    ) => A, 
+    
+    seed?: any
+): OperatorFunction<V, V | A>
+```
+
+OperatorFunction<V, V | A>: A function that returns an Observable that emits a single value that is the result of accumulating the values emitted by the source Observable.
+
+```
+import { reduce, interval, take, tap } from 'rxjs';
+
+const numbers = [1,2,3,4,5];
+
+interval(1000)
+.pipe(
+    take(6),
+    tap( console.log ),
+    reduce( (accumulator: number, actualValue: number) => accumulator + actualValue)
+)
+.subscribe({
+    next: value => console.log('next: ', value),
+    complete: () => console.log('Complete')
+})
+
+```
+
+## scan
+
+Useful for encapsulating and managing state. Applies an accumulator (or "reducer function") to each value from the source after an initial state is established -- either via a seed value (second argument), or from the first value from the source.
+
+```
+scan<V, A, S>(
+
+    accumulator: (
+        acc: V | A | S, 
+        value: V, 
+        index: number
+    ) => A, 
+    seed?: S
+    
+): OperatorFunction<V, V | A>
+```
+

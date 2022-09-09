@@ -32,6 +32,17 @@
 - [Operators: 'reduce'](#reduce)
 - [Operators: 'scan'](#scan)
 
+## Not Common Operators
+
+- [Operators: 'take'](#take)
+- [Operators: 'first'](#first)
+- [Operators: 'takeWhile'](#takewhile)
+- [Operators: 'takeUntil'](#takeuntil)
+- [Operators: 'skip'](#skip)
+- [Operators: 'distinct'](#distinct)
+- [Operators: 'distinctUntilChanged'](#distinctuntilchanged)
+- [Operators: 'distinctUntilKeyChanged'](#distinctuntilkeychanged)
+
 ---
 
 ## Basic RxJS Concepts
@@ -677,7 +688,7 @@ from(characters)
 .subscribe(filteredCharacter => console.log(filteredCharacter.name))
 ```
 
-## Chained Operators
+### Chained Operators
 
 Example where we want to filter all our keyboard event in the page
 and print by console ONLY when we press 'Enter'. For this example We want to do two steps:
@@ -700,7 +711,7 @@ observable$.pipe(
 .subscribe(console.log)
 ```
 
-## tap
+### tap
 
 Transparently perform actions or side-effects, such as logging.
 
@@ -727,7 +738,7 @@ numbers$
 .subscribe( final => console.log("Final Value:", final));
 ```
 
-## Progress-Bar
+### Progress-Bar
 
 Example to create a progress bar in a html document from typescript and rxjs operators:
 
@@ -841,7 +852,7 @@ Example to create a progress bar in a html document from typescript and rxjs ope
 
 
     ```
-## reduce
+### reduce
 Applies an accumulator function over the source Observable, and returns the accumulated result when the source completes, given an optional seed value.
 
 ```
@@ -876,7 +887,7 @@ interval(1000)
 
 ```
 
-## scan
+### scan
 
 Useful for encapsulating and managing state. Applies an accumulator (or "reducer function") to each value from the source after an initial state is established -- either via a seed value (second argument), or from the first value from the source.
 
@@ -892,4 +903,203 @@ scan<V, A, S>(
     
 ): OperatorFunction<V, V | A>
 ```
+---
 
+## Not Common Operators
+
+### take
+Emits only the first count values emitted by the source Observable.
+
+```
+take<T>(
+
+    count: number
+    
+): MonoTypeOperatorFunction<T>
+```
+
+**Example**: 
+```
+import { of } from 'rxjs';
+import { take, tap } from 'rxjs/operators';
+
+
+// We need and observalble
+const numbers$ = of(1,2,3,4,5);
+
+numbers$.pipe(
+    tap( t => console.log('tap', t) ),
+    take(2)
+)
+
+.subscribe({
+    next: value => console.log( value ),
+    complete: ()=> console.log('Complete')
+});
+```
+
+### first
+Emits only the first value (or the first value that meets some condition) emitted by the source Observable.
+
+```
+first<T, D>(
+    predicate?: (
+        value: T, 
+        index: number, 
+        source: Observable<T>
+    
+    ) => boolean, 
+    defaultValue?: D
+
+): OperatorFunction<T, T | D>
+```
+
+**Example**: 
+
+```
+import { fromEvent } from 'rxjs';
+import { first, tap, map } from 'rxjs/operators';
+
+const click$ = fromEvent<MouseEvent>( document, 'click' );
+
+click$
+.pipe(
+    tap(console.log),
+    first( event => event.clientY >= 150 )
+)
+.subscribe({
+    next: value => console.log(value),
+    complete: ()=> console.log('Complete')
+})
+```
+
+### takeWhile
+Emits values emitted by the source Observable so long as each value satisfies the given predicate, and then completes as soon as this predicate is not satisfied.
+
+```
+takeWhile<T>(
+    predicate: (
+    
+        value: T, 
+        index: number
+    
+    ) => boolean, 
+    
+    inclusive: boolean = false
+    
+): MonoTypeOperatorFunction<T>
+```
+**Example**: 
+
+```
+import { fromEvent } from 'rxjs';
+import { map, takeWhile } from 'rxjs/operators';
+
+const click$ = fromEvent<MouseEvent>( document, 'click' );
+
+click$
+.pipe( 
+    map(({ x,y }) => ({x,y})),
+    takeWhile( ({y}) => y <= 150, true )
+)
+.subscribe({
+    next: value => console.log( value ),
+    complete: ()=> console.log('Complete!')
+});
+```
+
+### takeUntil
+Emits the values emitted by the source Observable until a notifier Observable emits a value.
+
+```
+takeUntil<T>(
+
+    notifier: ObservableInput<any>
+    
+): MonoTypeOperatorFunction<T>
+```
+
+**Example**:
+```
+
+import { interval, fromEvent } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+// create html button
+const button = document.createElement('button');
+button.innerHTML = 'Stop Timer';
+document.querySelector('body').append(button);
+
+
+// counter - observable
+const counter$ = interval(1000);
+const clieckBtn = fromEvent(button, 'click');
+
+// subscription
+counter$
+.pipe(
+    takeUntil( clieckBtn )
+)
+.subscribe({
+    next: value => console.log('Next: ', value),
+    complete: ()=> console.log('Complete')
+})
+```
+
+### skip
+Returns an Observable that skips the first count items emitted by the source Observable.
+
+```
+skip<T>(
+
+    count: number
+    
+): MonoTypeOperatorFunction<T>
+```
+**Example**:
+```
+import { interval, fromEvent } from 'rxjs';
+import { takeUntil, skip, tap } from 'rxjs/operators';
+
+// create html button
+const button = document.createElement('button');
+button.innerHTML = 'Stop Timer';
+document.querySelector('body').append(button);
+
+
+// counter - observable
+const counter$ = interval(1000);
+const clieckBtn = fromEvent(button, 'click');
+
+// subscription
+counter$
+.pipe(
+    tap( ()=>console.log('tap element before') ),
+    skip(1),
+    tap( ()=>console.log('tap element after') ),
+
+    takeUntil( clieckBtn )
+)
+.subscribe({
+    next: value => console.log('Next: ', value),
+    complete: ()=> console.log('Complete')
+})
+```
+### distinct
+Returns an Observable that emits all items emitted by the source Observable that are distinct by comparison from previous items.
+
+```
+distinct<T, K>(
+
+    keySelector?: (value: T) => K, 
+    flushes?: Observable<any>
+    
+): MonoTypeOperatorFunction<T>
+```
+**Example**:
+```
+
+```
+
+### distinctUntilChanged
+### distinctUntilKeyChanged

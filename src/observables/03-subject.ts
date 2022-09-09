@@ -1,4 +1,4 @@
-import { Observer, Observable, Subject } from 'rxjs';
+import { Observer, Observable, Subject, BehaviorSubject } from 'rxjs';
 // Subject Exercise
 /*
 
@@ -58,3 +58,23 @@ setTimeout(() => {
     subject$.complete();
     subscription.unsubscribe();
 }, 3500);
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+// BehaviorSubject
+const behaviorSubject$ = new BehaviorSubject<string>('');
+
+const behavior = behaviorSubject$.subscribe({
+    next: value => console.log('Value: ',value),
+    error: error => console.error(error),
+    complete: ()=> console.log('complete')
+});
+
+
+// Update value
+behaviorSubject$.next('Hello')
+behaviorSubject$.next('World');
+
+behavior.unsubscribe();
+behaviorSubject$.next('!!!')// ignored because it's unsubscribed

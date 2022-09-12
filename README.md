@@ -43,6 +43,14 @@
 - [Operators: 'distinctUntilChanged'](#distinctuntilchanged)
 - [Operators: 'distinctUntilKeyChanged'](#distinctuntilkeychanged)
 
+## Operators that Deals With Time
+
+- [Operators: 'debounceTime']()
+- [Operators: 'throttleTime']()
+- [Operators: 'sampleTime']()
+- [Operators: 'sample']()
+- [Operators: 'auditTime']()
+
 ---
 
 ## Basic RxJS Concepts
@@ -1098,8 +1106,118 @@ distinct<T, K>(
 ```
 **Example**:
 ```
+const numbers$ = of(1,1,1,2,'2',3,3,4,5,6,7,8,'9',6,2);
 
+numbers$.pipe( distinct() ).subscribe(console.log);
+
+// log -> 1,2,'2',3,4,5,6,7,8,'9'
+```
+
+- Using objects
+```
+interface Character {
+    name: string;
+};
+
+const characters: Character[] = [ { name: 'Megaman' },
+    { name: 'X' },
+    { name: 'Zero' },
+    { name: 'Willi W.' },
+    { name: 'X' },
+    { name: 'Megaman' },
+];
+
+from( characters )
+
+.pipe(    distinct( character => character.name ) )
+
+.subscribe(console.log)
+
+// log -> { name: 'Megaman' }, { name: 'X' }, { name: 'Zero' }, { name: 'Willi W.' }
 ```
 
 ### distinctUntilChanged
+
+Returns a result Observable that emits all values pushed by the source observable if they are distinct in comparison to the last value the result observable emitted.
+
+```
+distinctUntilChanged<T, K>(
+
+    comparator?: (previous: K, current: K) => boolean, 
+    keySelector: (value: T) => K = identity as (value: T) => K
+    
+): MonoTypeOperatorFunction<T>
+```
+
+**Example**:
+```
+const numbers$ = of(1,1,1,2,1,'2',3,3,4,5,6,7,8,'9',6,2);
+
+numbers$.pipe(
+    distinctUntilChanged()// only distinct the previous and actual value
+)
+.subscribe(console.log);
+
+// 1,2,1,'2',3,4,5,6,7,'9',6,2
+```
+- Using objects
+```
+interface Character {
+    name: string;
+};
+
+const characters: Character[] = [
+    { name: 'Megaman' },
+    { name: 'Megaman' },
+    { name: 'Zero' },
+    { name: 'Willi W.' },
+    { name: 'X' },
+    { name: 'X' },
+];
+
+from( characters )
+.pipe(
+    distinctUntilChanged( (previousValue, actualValue) => previousValue.name === actualValue.name )
+)
+.subscribe(console.log)
+
+// log -> { name: 'Megaman' }, { name: 'Zero' }, { name: 'Willi W.' }, { name: 'X' }
+
+```
+
 ### distinctUntilKeyChanged
+Returns an Observable that emits all items emitted by the source Observable that are distinct by comparison from the previous item, using a property accessed by using the key provided to check if the two items are distinct.
+
+```
+distinctUntilKeyChanged<T, K extends keyof T>(
+
+    key: K, 
+    compare?: (x: T[K], y: T[K]) => boolean
+    
+): MonoTypeOperatorFunction<T>
+```
+**Example**:
+```
+import { distinctUntilKeyChanged, from } from "rxjs";
+
+interface Character {
+    name: string;
+};
+
+const characters: Character[] = [
+    { name: 'Megaman' },
+    { name: 'Megaman' },
+    { name: 'Zero' },
+    { name: 'Willi W.' },
+    { name: 'X' },
+    { name: 'X' },
+];
+
+from( characters )
+.pipe(
+    distinctUntilKeyChanged('name')
+)
+.subscribe(console.log)
+
+// log -> { name: 'Megaman' }, { name: 'Zero' }, { name: 'Willi W.' }, { name: 'X' }
+```

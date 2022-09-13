@@ -51,6 +51,14 @@
 - [Operators: 'sample'](#sample)
 - [Operators: 'auditTime'](#audittime)
 
+## RxJS using Ajax
+
+- [General ajax request](#general-ajax-request)
+- [Error Mangement with Fetch API](#error-mangement-with-fetch-api)
+- [RxJS Request - catchError](#rxjs-request---catcherror)
+- [RxJS Request - getJSON](#rxjs-request---getjson)
+- [C.R.U.D](#crud)
+
 ---
 
 ## Basic RxJS Concepts
@@ -1374,4 +1382,154 @@ clicl$
 /*
 Value printes: Last registered Value by the auditTime operator that comes from the click event
 */
+```
+
+---
+
+## RxJS using Ajax
+Simple API calling example using ajax:
+```
+// api calling
+const url = 'https://api.github.com/usersw?per_page=5';
+
+// request using fetch API
+const fetchPromise = fetch( url );
+
+// get information
+fetchPromise
+.then( response => response.json() )
+.then( data => console.log( 'data: ', data ) )
+.catch( error => console.warn( 'error in users: ', error ) )
+```
+### Error Mangement with Fetch API
+We can managing our errors using the 'then' statement in our promise like the example below:
+```
+// api calling
+const url = 'https://api.github.com/usersw?per_page=5';
+
+// request using fetch API
+const fetchPromise = fetch( url );
+
+/////////////////////////////////////////////////////////////////////
+// Error managing
+const errorManaging = ( response: Response ) => {
+    if( !response.ok ) throw new Error( response.statusText );
+
+    return response;
+};
+/////////////////////////////////////////////////////////////////////
+
+// get information
+fetchPromise
+.then( errorManaging )
+.then( response => response.json() )
+.then( data => console.log( 'data: ', data ) )
+.catch( error => console.warn( 'error in users: ', error ) )
+```
+
+### RxJS Request - catchError
+An alternative way to deal with our error could be the 'catchError' RxJS operator:
+
+```
+const catchErrorMethod = (error: AjaxError ) => {
+    console.warn( 'ERROR: ', error.message );
+    return of([]); //returning an observable with no information
+}
+// using ajax
+ajax( url )
+.pipe(
+    map( response => response.response ),
+    // catching errors
+    catchError( catchErrorMethod )
+)
+.subscribe( users => console.log('Users: ', users) )
+```
+
+### RxJS Request - getJSON
+A shorter way to make a HTTP request using ajax:
+```
+import { ajax } from 'rxjs/ajax';
+
+const url: string = "https://httpbin.org/delay/1";
+
+const observable$ = ajax.getJSON( url, {
+    'Content-Type':'application/json',
+    'mt-token':'ABC123'
+});
+
+observable$.subscribe( response => console.log('Data: ', response) )
+```
+
+### C.R.U.D
+
+- GET request
+```
+const url:string = 'https://httpbin.org/delay/1';
+
+// get request
+ajax
+.get(url, {
+    'Content-Type':'application/json',
+    'my-token':'ABC123'
+})
+.subscribe( (response) => console.log( response ) );
+```
+
+- POST request
+```
+ajax
+.post(
+    url, // path
+    {
+        id: 1,   // body
+        name: 'John'
+    }, 
+    {
+    'my-token':'ABC123' // header
+})
+.subscribe( (response) => console.log( response ) );
+```
+
+- PUT request
+```
+ajax
+.put(
+    url, // path
+    {
+        id: 1,   // body
+        name: 'John'
+    }, 
+    {
+    'my-token':'ABC123' // header
+})
+.subscribe( (response) => console.log( response ) );
+```
+
+- DELETE request
+```
+// delete rquest
+ajax
+.delete(
+    url, // path
+    {
+        'my-token':'ABC123' // header
+    }
+)
+.subscribe( (response) => console.log( response ) )
+```
+
+- ALTERNATIVE FORM
+```
+ajax({
+    url: url,
+    method: 'POST', // We can change our method typing the correct order
+    headers: {
+        'my-token': 'ABC123'
+    },
+    body: {
+        id: 2,
+        name: 'Jane' 
+    }
+})
+.subscribe(console.log);
 ```

@@ -59,6 +59,15 @@
 - [RxJS Request - getJSON](#rxjs-request---getjson)
 - [C.R.U.D](#crud)
 
+## Transformation Operators
+
+- [Operators: 'mergeAll'](#mergeall)
+- [Operators: 'Types'](#typing-operators)
+- [Operators: 'mergeMap'](#mergemap)
+- [Operators: 'switchMap'](#switchmap)
+- [Operators: 'concatMap'](#concatmap)
+- [Operators: 'exhaustMap'](#exhaustmap)
+
 ---
 
 ## Basic RxJS Concepts
@@ -1533,3 +1542,28 @@ ajax({
 })
 .subscribe(console.log);
 ```
+
+---
+## Transformation Operators
+
+### mergeAll
+Converts a higher-order Observable into a first-order Observable which concurrently delivers all values that are emitted on the inner Observables.
+
+```
+mergeAll<O extends ObservableInput<any>>(
+    
+    concurrent: number = Infinity
+    
+): OperatorFunction<O, ObservedValueOf<O>>
+```
+
+**Example**:
+```
+
+```
+
+### Typing Operators
+### mergeMap
+### switchMap
+### concatMap
+### exhaustMap

@@ -62,7 +62,6 @@
 ## Transformation Operators
 
 - [Operators: 'mergeAll'](#mergeall)
-- [Operators: 'Types'](#typing-operators)
 - [Operators: 'mergeMap'](#mergemap)
 - [Operators: 'switchMap'](#switchmap)
 - [Operators: 'concatMap'](#concatmap)
@@ -1558,12 +1557,185 @@ mergeAll<O extends ObservableInput<any>>(
 ```
 
 **Example**:
+In this example We are going to build a github user's list putting a type in our RxJS operators just for documentation.
 ```
+import { debounceTime, fromEvent, map, mergeAll, Observable } from "rxjs";
+import { ajax } from "rxjs/ajax";
+import { GithubUser } from "./interfaces/github-user.interface";
+import { GithubCollectionResponse } from "./interfaces/github-users.interfaces";
+
+// Helpers
+const displayUsers = ( users: GithubUser[] ) => {
+    orderList.innerHTML = '';
+    users.forEach( user =>{
+
+        // create HTML elements
+        const li        = document.createElement('li');
+        const img       = document.createElement('img');
+        const anchor    = document.createElement('a');
+
+        // set data
+        img.src         = user.avatar_url;
+        anchor.href     = user.html_url;
+        anchor.text     = 'View Page';
+        anchor.target   = '_blank';
+        
+        // appends
+        li.append( img );
+        li.append( user.login + ' ' );
+        li.append( anchor );
+
+        orderList.append( li );
+    });
+};
+
+// References
+const body = document.querySelector("body");
+const textInput = document.createElement("input");
+const orderList = document.createElement("ol");
+
+body.append(textInput, orderList);
+
+// Streams
+const input$ = fromEvent<KeyboardEvent>(textInput, "keyup");
+
+input$
+  .pipe(
+    debounceTime(500),
+
+    map<KeyboardEvent, Observable<GithubCollectionResponse>>((event) =>
+      ajax.getJSON(
+        `https://api.github.com/search/users?q=${event.target["value"]}`
+      )
+    ),
+
+    mergeAll<Observable<GithubCollectionResponse>>(),
+
+    // type: <what recieved , what emitted>
+    map<any, GithubUser[]>((response) => response["items"])
+  )
+  .subscribe( displayUsers );
 
 ```
 
-### Typing Operators
 ### mergeMap
+Projects each source value to an Observable which is merged in the output Observable.
+
+```
+mergeMap<T, R, O extends ObservableInput<any>>(
+
+    project: (value: T, index: number) => O, 
+    resultSelector?: number | ((outerValue: T, innerValue: ObservedValueOf<O>, 
+    outerIndex: number, innerIndex: number) => R), 
+    concurrent: number = Infinity
+
+): OperatorFunction<T, ObservedValueOf<O> | R>
+```
+**Example**:
+In this example We want to print any interval's operator values while We subscribe to a 'mousedown' observable until we subscribe to a 'mousedown' observable:
+
+```
+// mouse click exercise
+const mouseDown$ = fromEvent( document, 'mousedown' );
+const mouseUp$   = fromEvent( document, 'mouseup' );
+const interval$  = interval(1);
+
+ mouseDown$
+ .pipe(
+    // emit interval's values until mouseup is subscribed
+    mergeMap( ()=> interval$.pipe( takeUntil( mouseUp$ ) ) )
+ )
+ .subscribe( console.log );
+```
+
 ### switchMap
+Counts the number of emissions on the source and emits that number when the source completes.
+
+```
+count<T>(
+    
+    predicate?: (value: T, index: number) => boolean
+    
+): OperatorFunction<T, number>
+```
+**Example**:
+```
+const body = document.querySelector("body");
+const textInput = document.createElement("input");
+const orderList = document.createElement("ol");
+
+body.append(textInput, orderList);
+
+// Streams
+const input$ = fromEvent<KeyboardEvent>(textInput, "keyup");
+
+const url: string = `https://api.github.com/search/users?q=`;
+input$.pipe(
+  map((query) => query.target["value"]),
+  mergeMap((inputValue) => ajax.getJSON(url + inputValue)) // An action for every subscription to the input observable = To much requests!
+);
+// .subscribe( console.log )
+
+const url2: string = 'https://httpbin.org/delay/1?arg=';
+// If We use 'switchMap' We'va only the last subscription to the input observable. In thiscase we use the last value to make a request.
+input$
+  .pipe(
+    map((query) => query.target["value"]),
+    switchMap((inputValue) => ajax.getJSON(url2 + inputValue)) // An action for every subscription to the input observable = To much requests!
+  )
+  .subscribe(console.log);
+```
+
 ### concatMap
+Projects each source value to an Observable which is merged in the output Observable, in a serialized fashion waiting for each one to complete before merging the next.
+
+```
+concatMap<T, R, O extends ObservableInput<any>>(
+
+    project: (value: T, index: number) => O, 
+
+    resultSelector?: (
+        outerValue: T, 
+        innerValue: ObservedValueOf<O>, 
+        outerIndex: number, 
+        innerIndex: number) => R
+        
+): OperatorFunction<T, ObservedValueOf<O> | R>
+```
+
+**Example**:
+```
+const interval$ = interval(500).pipe( take(3) );
+const click$    = fromEvent( document, 'click' );
+
+// subscription
+click$
+.pipe(
+    concatMap( ()=> interval$ )
+)
+.subscribe( console.log );
+```
+
 ### exhaustMap
+Projects each source value to an Observable which is merged in the output Observable only if the previous projected Observable has completed.
+
+```
+exhaustMap<T, R, O extends ObservableInput<any>>(
+    
+    project: (
+        value: T, 
+        index: number) => O, 
+    
+    resultSelector?: (
+        outerValue: T, 
+        innerValue: ObservedValueOf<O>, 
+        outerIndex: number, 
+        innerIndex: number) => R
+        
+): OperatorFunction<T, ObservedValueOf<O> | R>
+```
+
+**Example**:
+```
+
+```
